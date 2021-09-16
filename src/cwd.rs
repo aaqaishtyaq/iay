@@ -1,12 +1,28 @@
 use std::env;
 use tico::tico;
+use colored::*;
 
-pub fn cwd() -> String {
-    let path = env::var("PWD").unwrap();
-    let is_dir_short = env::var("SHIRTEN_DIR").unwrap_or("1".into());
+pub fn cwd() -> Option<colored::ColoredString> {
+    let path_env = env::current_dir().ok()?;
+    let mut path = format!("{}", path_env.display());
+    let home = env::var("HOME").unwrap();
+    let tilde_expand = env::var("EXPAND_TILDE").unwrap_or("0".into());
 
-    match is_dir_short.as_ref() {
-        "0" => path,
-        _ => tico(&path[..], Option::None)
+    match tilde_expand.as_ref() {
+        "0" => {
+            let home_dir = &home.clone();
+            let home_dir_ext = format!("{}{}", home_dir, "/");
+            if (&path == home_dir) || *(&path.starts_with(&home_dir_ext)) {
+                path = path.replacen(&home_dir[..], "~", 1);
+            }
+        }
+        _ => {}
+    };
+
+    let cwd_shorten = env::var("SHORTEN_CWD").unwrap_or("1".into());
+    let cwd_color = env::var("CWD_COLOR").unwrap_or("bright blue".into());
+    match cwd_shorten.as_ref() {
+        "0" => return Some(path.color(cwd_color)),
+        _ => return Some(tico(&path, Option::None).color(cwd_color))
     }
 }
