@@ -38,10 +38,10 @@ pub fn vcs_status() -> Option<(colored::ColoredString, colored::ColoredString)> 
     };
     let branch;
 
-    let git_clean_color          = env::var("GIT_CLEAN_COLOR").unwrap_or("green".into());
-    let git_wt_added_color       = env::var("GIT_WT_ADDED_COLOR").unwrap_or("yellow".into());
-    let git_wt_modified_color    = env::var("GIT_WT_MODIFIED_COLOR").unwrap_or("blue".into());
-    let git_index_modified_color = env::var("GIT_INDEX_MODIFIED_COLOR").unwrap_or("green".into());
+    let git_clean_color          = env::var("IAY_GIT_CLEAN_COLOR").unwrap_or("green".into());
+    let git_wt_added_color       = env::var("IAY_GIT_WT_ADDED_COLOR").unwrap_or("yellow".into());
+    let git_wt_modified_color    = env::var("IAY_GIT_WT_MODIFIED_COLOR").unwrap_or("blue".into());
+    let git_index_modified_color = env::var("IAY_GIT_INDEX_MODIFIED_COLOR").unwrap_or("green".into());
     let stat_char = env::var("GIT_CLEAN").unwrap_or("·".into());
     let mut repo_stat = stat_char.color(&git_clean_color[..]);
     let mut branch_color_deduced = &git_clean_color;
@@ -51,7 +51,7 @@ pub fn vcs_status() -> Option<(colored::ColoredString, colored::ColoredString)> 
         match file.status() {
             // STATE: unstaged (working tree new files added)
             Status::WT_NEW => {
-                let stat_char = env::var("GIT_WT_ADDED").unwrap_or("!".into());
+                let stat_char = env::var("IAY_GIT_WT_ADDED").unwrap_or("!".into());
                 branch_color_deduced = &git_wt_added_color;
                 repo_stat = stat_char.color(&git_wt_added_color[..]);
                 break;
@@ -68,7 +68,7 @@ pub fn vcs_status() -> Option<(colored::ColoredString, colored::ColoredString)> 
             Status::INDEX_NEW     | Status::INDEX_MODIFIED   |
             Status::INDEX_DELETED | Status::INDEX_TYPECHANGE |
             Status::INDEX_RENAMED => {
-                let stat_char = env::var("GIT_INDEX_MODIFIED").unwrap_or("±".into());
+                let stat_char = env::var("IAY_GIT_INDEX_MODIFIED").unwrap_or("±".into());
                 branch_color_deduced = &git_index_modified_color;
                 repo_stat = stat_char.color(&git_index_modified_color[..]);
             },
@@ -77,8 +77,8 @@ pub fn vcs_status() -> Option<(colored::ColoredString, colored::ColoredString)> 
         }
     }
 
-    let branch_color = env::var("BRANCH_COLOR").unwrap_or(branch_color_deduced.into());
-    let commit_color = env::var("COMMIT_COLOR").unwrap_or("bright green".into());
+    let branch_color = env::var("IAY_BRANCH_COLOR").unwrap_or(branch_color_deduced.into());
+    let commit_color = env::var("IAY_COMMIT_COLOR").unwrap_or("bright green".into());
 
     if reference.is_branch() {
         branch = format!("{}{}", reference.shorthand().unwrap(), commit_dist).color(branch_color);

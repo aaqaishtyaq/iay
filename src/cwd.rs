@@ -6,7 +6,7 @@ pub fn cwd() -> Option<colored::ColoredString> {
     let path_env = env::current_dir().ok()?;
     let mut path = format!("{}", path_env.display());
     let home = env::var("HOME").unwrap();
-    let tilde_expand = env::var("EXPAND_TILDE").unwrap_or("0".into());
+    let tilde_expand = env::var("IAY_EXPAND_TILDE").unwrap_or("0".into());
 
     match tilde_expand.as_ref() {
         "0" => {
@@ -19,8 +19,8 @@ pub fn cwd() -> Option<colored::ColoredString> {
         _ => {}
     };
 
-    let cwd_shorten = env::var("SHORTEN_CWD").unwrap_or("1".into());
-    let cwd_color = env::var("CWD_COLOR").unwrap_or("bright blue".into());
+    let cwd_shorten = env::var("IAY_SHORTEN_CWD").unwrap_or("1".into());
+    let cwd_color = env::var("IAY_CWD_COLOR").unwrap_or("bright blue".into());
     match cwd_shorten.as_ref() {
         "0" => return Some(path.color(cwd_color)),
         _ => return Some(tico(&path, Option::None).color(cwd_color))
