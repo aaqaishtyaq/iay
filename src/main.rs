@@ -41,7 +41,7 @@ fn iay(zsh: bool) -> String {
 
     let (branch, status) = match env::var("DISABLE_VCS").unwrap_or("0".into()).as_ref() {
         "0" => vcs::vcs_status().unwrap_or(("".into(), "".into())),
-        _ => ("".into(), "".into())
+        _ => ("".into(), "".into()),
     };
 
     let venv = venv::get_name();
@@ -77,7 +77,7 @@ fn iay_minimal(zsh: bool) -> String {
     let vcs_tuple = vcs::vcs_status();
     let mut vcs_component = String::new();
     if let Some((branch, status)) = vcs_tuple {
-        vcs_component = format!(" [{} {}] ", branch, status);
+        vcs_component = format!(" {} {} ", branch, status);
     } else {
         vcs_component.push(' ');
     }

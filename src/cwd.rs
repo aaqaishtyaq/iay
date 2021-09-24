@@ -1,6 +1,6 @@
+use colored::*;
 use std::env;
 use tico::tico;
-use colored::*;
 
 pub fn cwd() -> Option<colored::ColoredString> {
     let path_env = env::current_dir().ok()?;
@@ -22,7 +22,7 @@ pub fn cwd() -> Option<colored::ColoredString> {
     let cwd_shorten = env::var("IAY_SHORTEN_CWD").unwrap_or("1".into());
     let cwd_color = env::var("IAY_CWD_COLOR").unwrap_or("bright blue".into());
     match cwd_shorten.as_ref() {
-        "0" => return Some(path.color(cwd_color)),
-        _ => return Some(tico(&path, Option::None).color(cwd_color))
+        "0" => return Some(path.color(cwd_color).bold()),
+        _ => return Some(tico(&path, Option::None).color(cwd_color).bold()),
     }
 }

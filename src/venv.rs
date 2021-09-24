@@ -1,5 +1,5 @@
-use std::env;
 use colored::*;
+use std::env;
 use std::path::Path;
 
 pub fn get_name() -> colored::ColoredString {
@@ -14,7 +14,7 @@ pub fn get_name() -> colored::ColoredString {
         }
         Err(_) => {}
     }
-    return "".white()
+    return "".white();
 }
 
 pub fn in_nix_shell() -> colored::ColoredString {
@@ -29,4 +29,3 @@ pub fn in_nix_shell() -> colored::ColoredString {
         _ => return "".white(),
     }
 }
-
