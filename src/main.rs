@@ -1,3 +1,19 @@
+/*
+IAY | Minimalist prompt for Bash/Zsh!
+Copyright (C) 2021 Aaqa Ishtyaq
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 mod cwd;
 mod prompt_char;
 mod vcs;
@@ -6,7 +22,7 @@ mod venv;
 use std::env;
 
 use clap::{App, Arg};
-use colored::*;
+use iay::colors;
 
 fn main() {
     let matches = App::new("iay")
@@ -27,16 +43,16 @@ fn main() {
         )
         .get_matches();
     if matches.is_present("minimal") {
-        println!("{}", iay_minimal(matches.is_present("zsh")));
+        println!("{}", iay_prompt_minimal(matches.is_present("zsh")));
     } else {
-        println!("{}", iay(matches.is_present("zsh")));
+        println!("{}", iay_prompt(matches.is_present("zsh")));
     }
 }
 
-fn iay(zsh: bool) -> String {
+fn iay_prompt(zsh: bool) -> String {
     let cwd = match cwd::cwd() {
         Some(c) => c,
-        None => "[directory does not exist]".color("red"),
+        None => colors::colored_string("[directory does not exist]", "red", ""),
     };
 
     let (branch, status) = match env::var("DISABLE_VCS").unwrap_or("0".into()).as_ref() {
@@ -69,10 +85,10 @@ fn iay(zsh: bool) -> String {
     }
 }
 
-fn iay_minimal(zsh: bool) -> String {
+fn iay_prompt_minimal(zsh: bool) -> String {
     let cwd = match cwd::cwd() {
         Some(c) => c,
-        None => "[directory does not exist]".color("red"),
+        None => colors::colored_string("[directory does not exist]", "red", " "),
     };
     let vcs_tuple = vcs::vcs_status();
     let mut vcs_component = String::new();

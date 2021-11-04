@@ -14,18 +14,4 @@ details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-use iay::colors;
-use std::env;
-
-pub fn prompt_char() -> String {
-    let user_char = env::var("IAY_PROMPT_CHAR").unwrap_or("% ".into());
-    let root_char = env::var("IAY_PROMPT_CHAR_ROOT").unwrap_or("# ".into());
-    let user_char_color = env::var("IAY_PROMPT_CHAR_COLOR").unwrap_or("blue".into());
-    let root_char_color = env::var("IAY_PROMPT_CHAR_ROOT_COLOR").unwrap_or("red".into());
-
-    let euid = unsafe { libc::geteuid() };
-    match euid {
-        0 => return colors::colored_string(&root_char, &root_char_color, "bold"),
-        _ => return colors::colored_string(&user_char, &user_char_color, "bold"),
-    }
-}
+pub mod colors;
