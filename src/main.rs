@@ -1,18 +1,6 @@
 /*
 IAY | Minimalist prompt for Bash/Zsh!
 Copyright (C) 2021 Aaqa Ishtyaq
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-details.
-
-You should have received a copy of the GNU General Public License along with
-this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 mod cwd;
 mod prompt_char;
@@ -55,7 +43,10 @@ fn iay_prompt(zsh: bool) -> String {
         None => colors::colored_string("[directory does not exist]", "red", ""),
     };
 
-    let (branch, status) = match env::var("DISABLE_VCS").unwrap_or("0".into()).as_ref() {
+    let (branch, status) = match env::var("DISABLE_VCS")
+        .unwrap_or_else(|_| "0".into())
+        .as_ref()
+    {
         "0" => vcs::vcs_status().unwrap_or(("".into(), "".into())),
         _ => ("".into(), "".into()),
     };
@@ -119,14 +110,12 @@ fn iay_prompt_minimal(zsh: bool) -> String {
                 } else {
                     ret.push(ch)
                 }
+            } else if ch == 0x1b_u8.into() {
+                // ESC char, always starts colors
+                ret.push_str(&format!("%{{{esc}", esc = ch));
+                color = true;
             } else {
-                if ch == 0x1b_u8.into() {
-                    // ESC char, always starts colors
-                    ret.push_str(&format!("%{{{esc}", esc = ch));
-                    color = true;
-                } else {
-                    ret.push(ch);
-                }
+                ret.push(ch);
             }
         }
         ret

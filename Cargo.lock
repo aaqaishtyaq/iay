@@ -136,11 +136,12 @@ dependencies = [
 
 [[package]]
 name = "iay"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ansi_term",
  "clap",
  "git2",
+ "lazy_static",
  "libc",
  "tico",
 ]
@@ -164,6 +165,12 @@ checksum = "af25a77299a7f711a01975c35a6a424eb6862092cc2d6c72c4ed6cbc56dfc1fa"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"

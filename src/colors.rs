@@ -1,18 +1,6 @@
 /*
 IAY | Minimalist prompt for Bash/Zsh!
 Copyright (C) 2021 Aaqa Ishtyaq
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-details.
-
-You should have received a copy of the GNU General Public License along with
-this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 use ansi_term::Colour;
 
@@ -26,11 +14,11 @@ pub fn colored_string(string: &str, color: &str, style: &str) -> String {
         _ => ansi_color.normal(),
     };
 
-    return ansi_style.paint(string).to_string();
+    ansi_style.paint(string).to_string()
 }
 
 pub fn ansi_colour(color: &str) -> ansi_term::Colour {
-    return match color {
+    match color {
         "black" => Colour::Fixed(0),
         "red" => Colour::Fixed(1),
         "green" => Colour::Fixed(2),
@@ -52,5 +40,25 @@ pub fn ansi_colour(color: &str) -> ansi_term::Colour {
         "bright magenta" => Colour::Fixed(13),
         // White color as fallback
         _ => Colour::Fixed(7),
-    };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bright_red() {
+        assert_eq!(ansi_colour("bright red"), Colour::Fixed(9))
+    }
+
+    #[test]
+    fn test_fallback() {
+        assert_eq!(ansi_colour(""), Colour::Fixed(7))
+    }
+
+    #[test]
+    fn test_blue() {
+        assert_eq!(ansi_colour("blue"), Colour::Fixed(4))
+    }
 }
