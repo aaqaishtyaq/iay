@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [ trunk ]
+  pull_request:
+    branches: [ trunk ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+        rust-toolchain:
+          - stable
+          - nightly
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install rust toolchain
+        uses: action-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust-toolchain }}
+          override: true
+          components: rustfmt, clippy
+      - name: Run cargo check
+        uses: action-rs/cargo@v2
+        with:
+          command: check
+
+      - name: Run cargo test
+        uses: action-rs/cargo@v1
+        with:
+          command: test
