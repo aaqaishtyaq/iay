@@ -83,7 +83,7 @@ pub fn vcs_status() -> Option<(String, String)> {
 
     let mut vcs_stat = String::new();
     if repo_stat.chars().count() >= 1 {
-        let open_pair = colors::colored_string("[", &branch_color[..], "bold");
+        let open_pair = colors::colored_string(" [", &branch_color[..], "bold");
         let close_pair = colors::colored_string("]", &branch_color[..], "bold");
         vcs_stat = [open_pair, repo_stat, close_pair].concat()
     }
