@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Build sources for different os and arch types
+  build:
+    name: Builld release binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: iay-x86_64-unknown-linux-gnu.tar.gz
+
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            name: iay-x86_64-unknown-linux-musl.tar.gz
+
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            name: iay-aarch64-unknown-linux-musl.tar.gz
+
+          - target: x86_64-apple-darwin
+            os: macOS-latest
+            name: iay-x86_64-apple-darwin.tar.gz
+
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2.4.0
+
+      # Cache files between builds
+      - name: Setup | Cache Cargo
+        uses: actions/cache@v2.1.7
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+          target: ${{ matrix.target }}
+
+      - name: Build | Build
+        uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --release --locked  --target ${{ matrix.target }}
+          use-cross: ${{ matrix.os == 'ubuntu-latest' }}
+
+      - name: Post Build | Prepare artifacts
+        run: |
+          cd target/${{ matrix.target }}/release
+          strip iay || true
+          tar czvf ../../../${{ matrix.name }} iay
+          cd -
+
+  # Create GitHub release with Rust build targets
+  github_release:
+    name: Create GitHub Release
+    needs: github_build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup | Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Setup | Checksums
+        run: for file in iay-*/iay-*; do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256"; done
+
+      - name: Build | Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          files: iay-*/iay-*
+
+  # Publish iay to Crates.io
+  cargo_publish:
+    name: Publish Cargo Package
+    runs-on: ubuntu-latest
+    needs: github_release
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Setup | Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Build | Publish
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
