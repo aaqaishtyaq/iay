@@ -84,7 +84,7 @@ fn iay_prompt_minimal(zsh: bool) -> String {
     let vcs_tuple = vcs::vcs_status();
     let mut vcs_component = String::new();
     if let Some((branch, status)) = vcs_tuple {
-        vcs_component = format!(" {} {} ", branch, status);
+        vcs_component = format!(" {}{} ", branch, status);
     } else {
         vcs_component.push(' ');
     }
@@ -114,6 +114,9 @@ fn iay_prompt_minimal(zsh: bool) -> String {
                 // ESC char, always starts colors
                 ret.push_str(&format!("%{{{esc}", esc = ch));
                 color = true;
+            } else if ch == '%' {
+                // % is a special char in zsh, escape it
+                ret.push_str("%#");
             } else {
                 ret.push(ch);
             }
