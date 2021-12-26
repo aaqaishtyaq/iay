@@ -11,11 +11,7 @@ pub fn get_name() -> String {
         let venv_name = Path::new(&venv_path[..]).file_name();
         if let Some(name) = venv_name {
             if let Some(valid_name) = name.to_str() {
-                return colors::colored_string(
-                    &format!("({})", valid_name),
-                    "bright black",
-                    "",
-                );
+                return colors::colored_string(&format!("({})", valid_name), "bright black", "");
             }
         }
     }
