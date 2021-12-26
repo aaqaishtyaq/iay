@@ -39,9 +39,10 @@ pub fn vcs_status() -> Option<(String, String)> {
             break;
         }
     }
-    if repo.is_none() {
-        return None;
-    }
+
+    // return if not a git repository
+    repo.as_ref()?;
+
     let repo = repo.unwrap();
 
     let mut commit_dist: String = "".into();
