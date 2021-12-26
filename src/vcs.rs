@@ -59,27 +59,27 @@ pub fn vcs_status() -> Option<(String, String)> {
         Ok(r) => r,
         Err(_) => return None,
     };
-    let branch;
+
     let (repo_stat, branch_color_deduced) = build_git_status_tray(&repo);
 
     let branch_color = env::var("IAY_BRANCH_COLOR").unwrap_or(branch_color_deduced);
     let commit_color = env::var("IAY_COMMIT_COLOR").unwrap_or_else(|_| "magenta".into());
 
-    if reference.is_branch() {
-        branch = colors::colored_string(
+    let branch = if reference.is_branch() {
+        colors::colored_string(
             &format!("{}{}", reference.shorthand().unwrap(), commit_dist),
             &branch_color[..],
             "bold",
-        );
+        )
     } else {
         let commit = reference.peel_to_commit().unwrap();
         let id = commit.id();
-        branch = colors::colored_string(
+        colors::colored_string(
             &format!("{:.6}{}", id, commit_dist),
             &commit_color[..],
             "bold",
-        );
-    }
+        )
+    };
 
     let mut vcs_stat = String::new();
     if repo_stat.chars().count() >= 1 {
@@ -102,7 +102,7 @@ fn build_git_status_tray(repo: &Repository) -> (String, String) {
     let mut repo_stat = String::new();
     let mut branch_color_deduced = (&git_clean_color[..]).to_string();
 
-    let file_stats = get_repo_statuses(&repo);
+    let file_stats = get_repo_statuses(repo);
 
     if file_stats.intersects(*STATUS_NEW) {
         let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "!".into());
