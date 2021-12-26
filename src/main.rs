@@ -1,3 +1,7 @@
+/*
+IAY | Minimalist prompt for Bash/Zsh!
+Copyright (C) 2021 Aaqa Ishtyaq
+*/
 mod cwd;
 mod prompt_char;
 mod vcs;
@@ -6,7 +10,7 @@ mod venv;
 use std::env;
 
 use clap::{App, Arg};
-use colored::*;
+use iay::colors;
 
 fn main() {
     let matches = App::new("iay")
@@ -27,21 +31,24 @@ fn main() {
         )
         .get_matches();
     if matches.is_present("minimal") {
-        println!("{}", iay_minimal(matches.is_present("zsh")));
+        println!("{}", iay_prompt_minimal(matches.is_present("zsh")));
     } else {
-        println!("{}", iay(matches.is_present("zsh")));
+        println!("{}", iay_prompt(matches.is_present("zsh")));
     }
 }
 
-fn iay(zsh: bool) -> String {
+fn iay_prompt(zsh: bool) -> String {
     let cwd = match cwd::cwd() {
         Some(c) => c,
-        None => "[directory does not exist]".color("red"),
+        None => colors::colored_string("[directory does not exist]", "red", ""),
     };
 
-    let (branch, status) = match env::var("DISABLE_VCS").unwrap_or("0".into()).as_ref() {
+    let (branch, status) = match env::var("DISABLE_VCS")
+        .unwrap_or_else(|_| "0".into())
+        .as_ref()
+    {
         "0" => vcs::vcs_status().unwrap_or(("".into(), "".into())),
-        _ => ("".into(), "".into())
+        _ => ("".into(), "".into()),
     };
 
     let venv = venv::get_name();
@@ -69,15 +76,15 @@ fn iay(zsh: bool) -> String {
     }
 }
 
-fn iay_minimal(zsh: bool) -> String {
+fn iay_prompt_minimal(zsh: bool) -> String {
     let cwd = match cwd::cwd() {
         Some(c) => c,
-        None => "[directory does not exist]".color("red"),
+        None => colors::colored_string("[directory does not exist]", "red", " "),
     };
     let vcs_tuple = vcs::vcs_status();
     let mut vcs_component = String::new();
     if let Some((branch, status)) = vcs_tuple {
-        vcs_component = format!(" [{} {}] ", branch, status);
+        vcs_component = format!(" {} {} ", branch, status);
     } else {
         vcs_component.push(' ');
     }
@@ -103,14 +110,12 @@ fn iay_minimal(zsh: bool) -> String {
                 } else {
                     ret.push(ch)
                 }
+            } else if ch == 0x1b_u8.into() {
+                // ESC char, always starts colors
+                ret.push_str(&format!("%{{{esc}", esc = ch));
+                color = true;
             } else {
-                if ch == 0x1b_u8.into() {
-                    // ESC char, always starts colors
-                    ret.push_str(&format!("%{{{esc}", esc = ch));
-                    color = true;
-                } else {
-                    ret.push(ch);
-                }
+                ret.push(ch);
             }
         }
         ret
