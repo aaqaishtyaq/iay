@@ -1,12 +1,17 @@
 [package]
 name = "iay"
-description = "iay! Shell prompt"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Aaqa Ishtyaq <aaqaishtyaq@gmail.com>"]
 homepage = "https://github.com/aaqaishtyaq/iay"
 edition = "2018"
 readme = "README.md"
-
+license = "MIT"
+keywords = ["prompt", "shell", "bash", "zsh"]
+categories = ["command-line-utilities"]
+description = """
+iay! The minimalistic, blazing-fast, and extendable prompt for bash and zsh.
+"""
+include = ["src/**/*", "Cross.toml", "LICENSE", "README.md"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
