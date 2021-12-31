@@ -68,6 +68,12 @@ jobs:
           tar czvf ../../../${{ matrix.name }} iay
           cd -
 
+      - name: Deploy | Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}
+
   # Create GitHub release with Rust build targets
   github_release:
     name: Create GitHub Release
