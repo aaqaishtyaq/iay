@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ "$(git symbolic-ref --short HEAD)" != "trunk" ]; then
+    echo "Can only release from trunk!" >&2
+    exit 1
+fi
+
+RELEASE_LEVEL=$1
+
+case "$RELEASE_LEVEL" in
+    minor|major|patch)
+        echo "Creating a $RELEASE_LEVEL release..."
+        ;;
+    *)
+        echo "Release level should be minor/major/patch" >&2
+        exit 1
+        ;;
+esac
+
+# uses cargo-release to generate releases
+# https://github.com/crate-ci/cargo-release
+cargo release --execute --sign --skip-publish --no-dev-version $RELEASE_LEVEL
