@@ -2,9 +2,10 @@
 IAY | Minimalist prompt for Bash/Zsh!
 Copyright (C) 2021 Aaqa Ishtyaq
 */
-use git2::{Repository, Status, StatusOptions};
+use git2::{Oid, Repository, Status, StatusOptions};
 use iay::colors;
 use lazy_static::lazy_static;
+use std::cell::Cell;
 use std::env;
 use std::path::Path;
 
@@ -43,27 +44,35 @@ pub fn vcs_status() -> Option<(String, String)> {
     // return if not a git repository
     repo.as_ref()?;
 
-    let repo = repo.unwrap();
+    let mut repo = repo.unwrap();
 
     let mut commit_dist: String = "".into();
     if let Some((ahead, behind)) = get_ahead_behind(&repo) {
         if ahead > 0 {
-            commit_dist.push_str(" ↑");
+            commit_dist.push_str(&colors::colored_string(
+                &format!(" {}⇡", ahead),
+                "magenta",
+                "bold",
+            ));
         }
         if behind > 0 {
-            commit_dist.push_str(" ↓");
+            commit_dist.push_str(&colors::colored_string(
+                &format!(" {}⇣", behind),
+                "cyan",
+                "bold",
+            ));
         }
     }
+
+    let (repo_stat, branch_color_deduced) = build_git_status_tray(&mut repo);
+
+    let branch_color = env::var("IAY_BRANCH_COLOR").unwrap_or(branch_color_deduced);
+    let commit_color = env::var("IAY_COMMIT_COLOR").unwrap_or_else(|_| "magenta".into());
 
     let reference = match repo.head() {
         Ok(r) => r,
         Err(_) => return None,
     };
-
-    let (repo_stat, branch_color_deduced) = build_git_status_tray(&repo);
-
-    let branch_color = env::var("IAY_BRANCH_COLOR").unwrap_or(branch_color_deduced);
-    let commit_color = env::var("IAY_COMMIT_COLOR").unwrap_or_else(|_| "magenta".into());
 
     let branch = if reference.is_branch() {
         colors::colored_string(
@@ -91,7 +100,7 @@ pub fn vcs_status() -> Option<(String, String)> {
     Some((branch, vcs_stat))
 }
 
-fn build_git_status_tray(repo: &Repository) -> (String, String) {
+fn build_git_status_tray(repo: &mut Repository) -> (String, String) {
     let git_clean_color = env::var("IAY_GIT_CLEAN_COLOR").unwrap_or_else(|_| "green".into());
     let git_wt_added_color = env::var("IAY_GIT_WT_ADDED_COLOR").unwrap_or_else(|_| "yellow".into());
     let git_index_modified_color =
@@ -122,7 +131,24 @@ fn build_git_status_tray(repo: &Repository) -> (String, String) {
         repo_stat += &colors::colored_string(&stat_symbol, &git_index_modified_color[..], "bold");
     }
 
+    if is_stashed(repo) {
+        let stat_symbol = env::var("IAY_GIT_STATUS_STASH").unwrap_or_else(|_| "$".into());
+        repo_stat += &colors::colored_string(&stat_symbol, &branch_color_deduced[..], "bold");
+    }
+
     (repo_stat, branch_color_deduced)
+}
+
+fn is_stashed(repo: &mut Repository) -> bool {
+    let stashed = Cell::new(false);
+
+    let _ = repo.stash_foreach(|_a: usize, _b: &str, _c: &Oid| -> bool {
+        stashed.set(true);
+        // stop as soon as we determine that there's any stash
+        false
+    });
+
+    stashed.get()
 }
 
 fn get_repo_statuses(repo: &Repository) -> Status {
