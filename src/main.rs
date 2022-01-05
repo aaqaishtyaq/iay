@@ -52,7 +52,7 @@ fn iay_prompt(zsh: bool) -> String {
     };
 
     let venv = venv::get_name();
-    let prompt_char = prompt_char::prompt_char();
+    let prompt_char = prompt_char::prompt_char(zsh);
 
     if zsh {
         format!(
@@ -89,7 +89,7 @@ fn iay_prompt_minimal(zsh: bool) -> String {
         vcs_component.push(' ');
     }
     let venv = venv::get_name();
-    let prompt_char = prompt_char::prompt_char();
+    let prompt_char = prompt_char::prompt_char(zsh);
 
     if zsh {
         let fmt = format!(
@@ -114,9 +114,6 @@ fn iay_prompt_minimal(zsh: bool) -> String {
                 // ESC char, always starts colors
                 ret.push_str(&format!("%{{{esc}", esc = ch));
                 color = true;
-            } else if ch == '%' {
-                // % is a special char in zsh, escape it
-                ret.push_str("%#");
             } else {
                 ret.push(ch);
             }
