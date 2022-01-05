@@ -12,6 +12,12 @@ pub fn cwd() -> Option<String> {
     let home = env::var("HOME").unwrap();
     let tilde_expand = env::var("IAY_EXPAND_TILDE").unwrap_or_else(|_| "0".into());
 
+    let cwd_color = if path.contains(&home) {
+        env::var("IAY_CWD_COLOR").unwrap_or_else(|_| "bright red".into())
+    } else {
+        env::var("IAY_CWD_ROOT_COLOR").unwrap_or_else(|_| "bright cyan".into())
+    };
+
     if let "0" = tilde_expand.as_ref() {
         let home_dir = &home;
         let home_dir_ext = format!("{}{}", home_dir, "/");
@@ -21,7 +27,6 @@ pub fn cwd() -> Option<String> {
     };
 
     let cwd_shorten = env::var("IAY_SHORTEN_CWD").unwrap_or_else(|_| "1".into());
-    let cwd_color = env::var("IAY_CWD_COLOR").unwrap_or_else(|_| "bright blue".into());
     match cwd_shorten.as_ref() {
         "0" => Some(colors::colored_string(&path, &cwd_color, "bold")),
         _ => Some(colors::colored_string(
