@@ -109,25 +109,25 @@ fn build_git_status_tray(repo: &mut Repository) -> (String, String) {
     let git_branch_modified_color =
         env::var("IAY_GIT_BRANCH_MODIFIED_COLOR").unwrap_or_else(|_| "blue".into());
     let mut repo_stat = String::new();
-    let mut branch_color_deduced = (&git_clean_color[..]).to_string();
+    let mut branch_color_deduced = (git_clean_color[..]).to_string();
 
     let file_stats = get_repo_statuses(repo);
 
     if file_stats.intersects(*STATUS_NEW) {
         let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "!".into());
-        branch_color_deduced = (&git_wt_added_color[..]).to_string();
+        branch_color_deduced = (git_wt_added_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_wt_added_color[..], "bold");
     }
 
     if file_stats.intersects(*STATUS_UNSTAGED) {
         let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "±".into());
-        branch_color_deduced = (&git_branch_modified_color[..]).to_string();
+        branch_color_deduced = (git_branch_modified_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_wt_modified_color[..], "bold");
     }
 
     if file_stats.intersects(*STATUS_STAGED) {
         let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "±".into());
-        branch_color_deduced = (&git_branch_modified_color[..]).to_string();
+        branch_color_deduced = (git_branch_modified_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_index_modified_color[..], "bold");
     }
 
