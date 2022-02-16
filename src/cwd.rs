@@ -13,7 +13,7 @@ pub fn cwd() -> Option<String> {
     let tilde_expand = env::var("IAY_EXPAND_TILDE").unwrap_or_else(|_| "0".into());
 
     let cwd_color = if path.contains(&home) {
-        env::var("IAY_CWD_COLOR").unwrap_or_else(|_| "bright red".into())
+        env::var("IAY_CWD_HOME_COLOR").unwrap_or_else(|_| "bright red".into())
     } else {
         env::var("IAY_CWD_ROOT_COLOR").unwrap_or_else(|_| "bright cyan".into())
     };

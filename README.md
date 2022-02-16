@@ -23,3 +23,7 @@ _iay_prompt() {
 }
 add-zsh-hook precmd _iay_prompt
 ```
+
+![iay prompt](https://github.com/dvit0/fsrv-cdn/raw/627d3f3697bb3fd9d104b90ebbbcb62fc11ea61c/files/iay_prompt.png)
+
+## [Configure the prompt](Configuration.md)

@@ -43,12 +43,12 @@ fn iay_prompt(zsh: bool) -> String {
         None => colors::colored_string("[directory does not exist]", "red", ""),
     };
 
-    let (branch, status) = match env::var("DISABLE_VCS")
+    let vcs_component = match env::var("IAY_DISABLE_VCS")
         .unwrap_or_else(|_| "0".into())
         .as_ref()
     {
-        "0" => vcs::vcs_status().unwrap_or(("".into(), "".into())),
-        _ => ("".into(), "".into()),
+        "0" => vcs_tray(),
+        _ => "".into(),
     };
 
     let venv = venv::get_name();
@@ -56,19 +56,17 @@ fn iay_prompt(zsh: bool) -> String {
 
     if zsh {
         format!(
-            "%{{{cwd} {branch} {status}%}} %{{\n{venv}{pchar}%}} ",
+            "%{{{cwd}{vcs}%}} %{{\n{venv}{pchar}%}} ",
             cwd = cwd,
-            branch = branch,
-            status = status,
+            vcs = vcs_component,
             venv = venv,
             pchar = prompt_char
         )
     } else {
         format!(
-            "{cwd} {branch} {status}\n{venv}{nix}{pchar} ",
+            "{cwd}{vcs}\n{venv}{nix}{pchar} ",
             cwd = cwd,
-            branch = branch,
-            status = status,
+            vcs = vcs_component,
             venv = venv,
             pchar = prompt_char,
             nix = venv::in_nix_shell()
@@ -81,13 +79,15 @@ fn iay_prompt_minimal(zsh: bool) -> String {
         Some(c) => c,
         None => colors::colored_string("[directory does not exist]", "red", " "),
     };
-    let vcs_tuple = vcs::vcs_status();
-    let mut vcs_component = String::new();
-    if let Some((branch, status)) = vcs_tuple {
-        vcs_component = format!(" {}{} ", branch, status);
-    } else {
-        vcs_component.push(' ');
-    }
+
+    let vcs_component = match env::var("IAY_DISABLE_VCS")
+        .unwrap_or_else(|_| "0".into())
+        .as_ref()
+    {
+        "0" => vcs_tray(),
+        _ => "".into(),
+    };
+
     let venv = venv::get_name();
     let prompt_char = prompt_char::prompt_char(zsh);
 
@@ -128,4 +128,16 @@ fn iay_prompt_minimal(zsh: bool) -> String {
             pchar = prompt_char
         )
     }
+}
+
+fn vcs_tray() -> String {
+    let vcs_tuple = vcs::vcs_status();
+    let mut vcs_component = String::new();
+    if let Some((branch, status)) = vcs_tuple {
+        vcs_component = format!(" {}{} ", branch, status);
+    } else {
+        vcs_component.push(' ');
+    }
+
+    vcs_component
 }
