@@ -29,7 +29,7 @@ lazy_static! {
     static ref STATUS_DELETED: Status = Status::WT_DELETED | Status::INDEX_DELETED;
 }
 
-pub fn vcs_status() -> Option<(String, String)> {
+fn vcs_status() -> Option<(String, String)> {
     let current_dir = env::var("PWD").unwrap();
 
     let mut repo: Option<Repository> = None;
@@ -173,4 +173,26 @@ fn get_ahead_behind(r: &Repository) -> Option<(usize, usize)> {
     let upstream_oid = (upstream.get().target())?;
 
     r.graph_ahead_behind(head_oid, upstream_oid).ok()
+}
+
+fn vcs_tray() -> String {
+    let vcs_tuple = vcs_status();
+    let mut vcs_component = String::new();
+    if let Some((branch, status)) = vcs_tuple {
+        vcs_component = format!(" {}{} ", branch, status);
+    } else {
+        vcs_component.push(' ');
+    }
+
+    vcs_component
+}
+
+pub fn status() -> String {
+    match env::var("IAY_DISABLE_VCS")
+        .unwrap_or_else(|_| "0".into())
+        .as_ref()
+    {
+        "0" => vcs_tray(),
+        _ => " ".into(),
+    }
 }
