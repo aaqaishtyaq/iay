@@ -1,6 +1,6 @@
 [package]
 name = "iay"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Aaqa Ishtyaq <aaqaishtyaq@gmail.com>"]
 homepage = "https://github.com/aaqaishtyaq/iay"
 edition = "2018"
