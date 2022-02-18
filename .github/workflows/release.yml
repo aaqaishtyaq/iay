@@ -114,3 +114,25 @@ jobs:
 
       - name: Build | Publish
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+
+  # Update homebrew-formula
+  homebrew_publish:
+    name: Update homebrew formula
+    runs-on: ubuntu-latest
+    needs: github_release
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Setup | Release Tag
+        run: |
+          GIT_TAG=${GITHUB_REF#refs/tags/}
+          echo "RELEASE_VERSION=$(echo $GIT_TAG | sed 's/^v//g')" >> $GITHUB_ENV
+
+      - name: Trigger formulae bump
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: aaqaishtyaq/homebrew-tap
+          event-type: version-updated
+          client-payload: '{"name": "${{ github.event.repository.name }}", "version":"${{ env.RELEASE_VERSION }}"}'
