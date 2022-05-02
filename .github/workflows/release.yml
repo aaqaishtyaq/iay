@@ -130,7 +130,7 @@ jobs:
           echo "RELEASE_VERSION=$(echo $GIT_TAG | sed 's/^v//g')" >> $GITHUB_ENV
 
       - name: Trigger formulae bump
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: aaqaishtyaq/homebrew-tap
