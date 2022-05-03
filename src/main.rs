@@ -7,33 +7,29 @@ mod prompt_char;
 mod vcs;
 mod venv;
 
-use std::env;
+use clap::Parser;
 
-use clap::{App, Arg};
 use iay::colors;
 
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// Use minimal variant
+    #[clap(short, long)]
+    minimal: bool,
+
+    /// Use ZSH formatting
+    #[clap(short, long)]
+    zsh: bool,
+}
+
 fn main() {
-    let matches = App::new("iay")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(
-            Arg::with_name("minimal")
-                .short("m")
-                .long("minimal")
-                .help("use minimal variant"),
-        )
-        .arg(
-            Arg::with_name("zsh")
-                .short("z")
-                .long("zsh")
-                .help("Use ZSH formatting"),
-        )
-        .get_matches();
-    if matches.is_present("minimal") {
-        println!("{}", iay_prompt_minimal(matches.is_present("zsh")));
+    let cmd = Args::parse();
+
+    if cmd.minimal {
+        println!("{}", iay_prompt_minimal(cmd.zsh));
     } else {
-        println!("{}", iay_prompt(matches.is_present("zsh")));
+        println!("{}", iay_prompt(cmd.zsh));
     }
 }
 
