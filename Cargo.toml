@@ -19,6 +19,6 @@ include = ["src/**/*", "LICENSE", "README.md"]
 ansi_term = "0.11.0"
 clap = "2.33.3"
 git2 = { version = "0.14.2", default-features = false }
-libc = "0.2.101"
+libc = "0.2.125"
 tico = "2.0.0"
 lazy_static = "1.4.0"
