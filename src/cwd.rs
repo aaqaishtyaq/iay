@@ -36,3 +36,22 @@ pub fn cwd() -> Option<String> {
         )),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn test_cwd() {
+        env::set_var("IAY_SHORTEN_CWD", "0");
+        env::set_var("IAY_EXPAND_TILDE", "0");
+
+        let path = env::current_dir().unwrap();
+        let path = format!("{}", path.display());
+        assert_eq!(
+            cwd(),
+            Some(colors::colored_string(&path, "bright cyan", "bold"))
+        )
+    }
+}
