@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn test_cwd() {
         env::set_var("IAY_SHORTEN_CWD", "0");
-        env::set_var("IAY_EXPAND_TILDE", "0");
+        env::set_var("IAY_EXPAND_TILDE", "1");
 
         let path = env::current_dir().unwrap();
         let path = format!("{}", path.display());
