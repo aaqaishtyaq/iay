@@ -44,14 +44,15 @@ mod tests {
 
     #[test]
     fn test_cwd() {
+        let path = format!("{}", env::current_dir().unwrap().display());
+
         env::set_var("IAY_SHORTEN_CWD", "0");
         env::set_var("IAY_EXPAND_TILDE", "1");
+        env::set_var("IAY_CWD_HOME_COLOR", "bright red");
 
-        let path = env::current_dir().unwrap();
-        let path = format!("{}", path.display());
         assert_eq!(
             cwd(),
-            Some(colors::colored_string(&path, "bright cyan", "bold"))
+            Some(colors::colored_string(&path, "bright red", "bold"))
         )
     }
 }
