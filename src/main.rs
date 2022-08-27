@@ -8,6 +8,7 @@ mod vcs;
 mod venv;
 
 use clap::Parser;
+use std::fmt::Write as _;
 
 use iay::colors;
 
@@ -95,7 +96,7 @@ fn iay_prompt_minimal(zsh: bool) -> String {
                 }
             } else if ch == 0x1b_u8.into() {
                 // ESC char, always starts colors
-                ret.push_str(&format!("%{{{esc}", esc = ch));
+                let _ = write!(ret, "%{{{esc}", esc = ch);
                 color = true;
             } else {
                 ret.push(ch);
