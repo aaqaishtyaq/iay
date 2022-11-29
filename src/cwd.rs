@@ -49,6 +49,7 @@ mod tests {
         env::set_var("IAY_SHORTEN_CWD", "0");
         env::set_var("IAY_EXPAND_TILDE", "1");
         env::set_var("IAY_CWD_HOME_COLOR", "bright red");
+        env::set_var("IAY_CWD_ROOT_COLOR", "bright red");
 
         assert_eq!(
             cwd(),
