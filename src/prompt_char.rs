@@ -24,3 +24,21 @@ pub fn prompt_char(zsh: bool) -> String {
         _ => colors::colored_string(&user_char, &user_char_color, "bold"),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn test_prompt_char() {
+        env::set_var("IAY_PROMPT_CHAR_ROOT", "$");
+        env::set_var("IAY_PROMPT_CHAR_COLOR", "blue");
+        env::set_var("IAY_PROMPT_CHAR_ROOT_COLOR", "blue");
+
+        assert_eq!(
+            prompt_char(false),
+            colors::colored_string("$", "blue", "bold")
+        )
+    }
+}
