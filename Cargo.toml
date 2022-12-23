@@ -17,7 +17,7 @@ include = ["src/**/*", "LICENSE", "README.md"]
 
 [dependencies]
 ansi_term = "0.12.1"
-clap = { version = "4.0.26", features = ["derive"] }
+clap = { version = "4.0.32", features = ["derive"] }
 git2 = { version = "0.15.0", default-features = false }
 libc = "0.2.137"
 tico = "2.0.0"
