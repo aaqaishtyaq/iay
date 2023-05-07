@@ -31,6 +31,10 @@ jobs:
             os: macOS-latest
             name: iay-x86_64-apple-darwin.tar.gz
 
+          - target: g-apple-darwin
+            os: macOS-latest
+            name: iay-aarch64-apple-darwin.tar.gz
+
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
