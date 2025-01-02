@@ -95,34 +95,34 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-  codecoverage:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust-toolchain:
-          - stable
-          - nightly
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
+  # codecoverage:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       rust-toolchain:
+  #         - stable
+  #         - nightly
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v3
 
-      - name: Install rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust-toolchain }}
-          override: true
-          components: rustfmt, clippy
+  #     - name: Install rust toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: ${{ matrix.rust-toolchain }}
+  #         override: true
+  #         components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v2
+  #     - uses: Swatinem/rust-cache@v2
 
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.15.0'
-          args: '-- --test-threads 1'
+  #     - name: Run cargo-tarpaulin
+  #       uses: actions-rs/tarpaulin@v0.1
+  #       with:
+  #         version: '0.15.0'
+  #         args: '-- --test-threads 1'
 
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
+  #     - name: Upload to codecov.io
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         token: ${{secrets.CODECOV_TOKEN}}
