@@ -1,7 +1,9 @@
 {
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, flake-utils, naersk }:
@@ -16,17 +18,18 @@
             pname = "iay";
             root = ./.;
           };
-          defaultPackage = packages.iay;
+          packages.default = packages.iay;
 
           # `nix run`
           apps.iay = flake-utils.lib.mkApp {
             drv = packages.iay;
           };
-          defaultApp = apps.iay;
+          apps.default = apps.iay;
 
           # `nix develop`
-          devShell = pkgs.mkShell {
-            nativeBuildInputs = with pkgs; [ rustc cargo ];
+          devShells.default = pkgs.mkShell {
+            packages = with pkgs; [ cargo clippy rustc rustfmt pkg-config ];
+            buildInputs = with pkgs; [ libgit2 ];
           };
         }
     );
