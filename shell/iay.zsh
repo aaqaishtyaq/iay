@@ -18,9 +18,13 @@ _iay_async_poll() {
 }
 
 _iay_async_start() {
+  setopt localoptions no_bgnice
   [[ -n $_iay_async_pid ]] && return
   (
-    command "${IAY_COMMAND:-iay}" -z > "$_iay_async_result"
+    local result
+    result=$(mktemp "$_iay_async_result.XXXXXX") || exit
+    command "${IAY_COMMAND:-iay}" -z > "$result"
+    [[ -d $_iay_async_dir ]] && mv -f -- "$result" "$_iay_async_result"
   ) &!
   _iay_async_pid=$!
 }
