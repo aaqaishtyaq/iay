@@ -41,6 +41,18 @@ source /path/to/iay/shell/iay.zsh
 
   Set `IAY_COMMAND` before sourcing either file when `iay` is not on `PATH`.
 
+## Verify prompt states
+
+Run the disposable Git-state verifier to display and check clean, untracked,
+unstaged, staged, stash, ahead, and behind prompts:
+
+```shell
+./scripts/verify-prompt
+```
+
+Set `IAY_COMMAND` to test an already-built binary instead of building the
+current checkout.
+
 ## [Configure the prompt](Configuration.md)
 
 Configurations for the prompt.
