@@ -37,19 +37,28 @@ export IAY_DISABLE_VCS=1
 export IAY_GIT_CLEAN_COLOR="green"
 
 # symbol to represent unstaged repo state
-export IAY_GIT_STATUS_STAGED="±"
+export IAY_GIT_STATUS_UNSTAGED="±"
 export IAY_GIT_WT_MODIFIED="cyan"
 
 # symbol to represent staged repo state
 export IAY_GIT_STATUS_STAGED="±"
 export IAY_GIT_INDEX_MODIFIED_COLOR="yellow"
 
-# synbol to represent new file
-export IAY_GIT_WT_ADDED_COLOR="!"
+# symbol and colour to represent a new file
+export IAY_GIT_STATUS_NEW="!"
 export IAY_GIT_WT_ADDED_COLOR="magenta"
 
 # symbol to represent stashed changes indicator
 export IAY_GIT_STATUS_STASH="$"
+
+# Full working-tree traversal is enabled by default so untracked files are
+# displayed. Set this to 0 for a faster synchronous prompt in very large repos.
+export IAY_GIT_CHECK_UNTRACKED=0
+
+# These are enabled by default to preserve the original prompt display. Set
+# either to 0 to skip its Git graph/ref traversal in synchronous integrations.
+export IAY_GIT_SHOW_UPSTREAM=0
+export IAY_GIT_SHOW_STASH=0
 
 # Change branch colour when HEAD modifies
 export IAY_GIT_BRANCH_MODIFIED_COLOR="blue"

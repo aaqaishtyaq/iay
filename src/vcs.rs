@@ -4,63 +4,30 @@ Copyright (C) 2021 Aaqa Ishtyaq
 */
 use git2::{Oid, Repository, Status, StatusOptions};
 use iay::colors;
-use lazy_static::lazy_static;
 use std::cell::Cell;
 use std::env;
-use std::path::Path;
-
-// Taken from: https://github.com/Ryooooooga/almel/blob/467e8f699e840c418a7eed5e0e22cf9c34ed1dca/src/segments/git_repo.rs
-lazy_static! {
-    static ref STATUS_CONFLICTED: Status = Status::CONFLICTED;
-    static ref STATUS_UNSTAGED: Status =
-        Status::WT_MODIFIED | Status::WT_DELETED | Status::WT_RENAMED | Status::WT_TYPECHANGE;
-    static ref STATUS_STAGED: Status = Status::INDEX_NEW
-        | Status::INDEX_MODIFIED
-        | Status::INDEX_DELETED
-        | Status::INDEX_RENAMED
-        | Status::INDEX_TYPECHANGE;
-    static ref STATUS_MODIFIED: Status = Status::INDEX_MODIFIED
-        | Status::INDEX_RENAMED
-        | Status::INDEX_TYPECHANGE
-        | Status::WT_MODIFIED
-        | Status::WT_RENAMED
-        | Status::WT_TYPECHANGE;
-    static ref STATUS_NEW: Status = Status::WT_NEW;
-    static ref STATUS_DELETED: Status = Status::WT_DELETED | Status::INDEX_DELETED;
-}
 
 fn vcs_status() -> Option<(String, String)> {
-    let current_dir = env::var("PWD").unwrap();
-
-    let mut repo: Option<Repository> = None;
-    let current_path = Path::new(&current_dir[..]);
-    for path in current_path.ancestors() {
-        if let Ok(r) = Repository::open(path) {
-            repo = Some(r);
-            break;
-        }
-    }
-
-    // return if not a git repository
-    repo.as_ref()?;
-
-    let mut repo = repo.unwrap();
+    let current_dir = env::current_dir().ok()?;
+    let mut repo = Repository::discover(current_dir).ok()?;
 
     let mut commit_dist: String = "".into();
-    if let Some((ahead, behind)) = get_ahead_behind(&repo) {
-        if ahead > 0 {
-            commit_dist.push_str(&colors::colored_string(
-                &format!(" {}⇡", ahead),
-                "magenta",
-                "bold",
-            ));
-        }
-        if behind > 0 {
-            commit_dist.push_str(&colors::colored_string(
-                &format!(" {}⇣", behind),
-                "cyan",
-                "bold",
-            ));
+    if enabled("IAY_GIT_SHOW_UPSTREAM", true) {
+        if let Some((ahead, behind)) = get_ahead_behind(&repo) {
+            if ahead > 0 {
+                commit_dist.push_str(&colors::colored_string(
+                    &format!(" {}⇡", ahead),
+                    "magenta",
+                    "bold",
+                ));
+            }
+            if behind > 0 {
+                commit_dist.push_str(&colors::colored_string(
+                    &format!(" {}⇣", behind),
+                    "cyan",
+                    "bold",
+                ));
+            }
         }
     }
 
@@ -113,25 +80,33 @@ fn build_git_status_tray(repo: &mut Repository) -> (String, String) {
 
     let file_stats = get_repo_statuses(repo);
 
-    if file_stats.intersects(*STATUS_NEW) {
-        let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "!".into());
+    if file_stats.intersects(Status::WT_NEW) {
+        let stat_symbol = configured_symbol("IAY_GIT_STATUS_NEW", "!");
         branch_color_deduced = (git_wt_added_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_wt_added_color[..], "bold");
     }
 
-    if file_stats.intersects(*STATUS_UNSTAGED) {
-        let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "±".into());
+    if file_stats.intersects(
+        Status::WT_MODIFIED | Status::WT_DELETED | Status::WT_RENAMED | Status::WT_TYPECHANGE,
+    ) {
+        let stat_symbol = configured_symbol("IAY_GIT_STATUS_UNSTAGED", "±");
         branch_color_deduced = (git_branch_modified_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_wt_modified_color[..], "bold");
     }
 
-    if file_stats.intersects(*STATUS_STAGED) {
-        let stat_symbol = env::var("IAY_GIT_STATUS_STAGED").unwrap_or_else(|_| "±".into());
+    if file_stats.intersects(
+        Status::INDEX_NEW
+            | Status::INDEX_MODIFIED
+            | Status::INDEX_DELETED
+            | Status::INDEX_RENAMED
+            | Status::INDEX_TYPECHANGE,
+    ) {
+        let stat_symbol = configured_symbol("IAY_GIT_STATUS_STAGED", "±");
         branch_color_deduced = (git_branch_modified_color[..]).to_string();
         repo_stat += &colors::colored_string(&stat_symbol, &git_index_modified_color[..], "bold");
     }
 
-    if is_stashed(repo) {
+    if enabled("IAY_GIT_SHOW_STASH", true) && is_stashed(repo) {
         let stat_symbol = env::var("IAY_GIT_STATUS_STASH").unwrap_or_else(|_| "$".into());
         repo_stat += &colors::colored_string(&stat_symbol, &branch_color_deduced[..], "bold");
     }
@@ -153,11 +128,24 @@ fn is_stashed(repo: &mut Repository) -> bool {
 
 fn get_repo_statuses(repo: &Repository) -> Status {
     let mut options = StatusOptions::new();
-    options.include_untracked(true);
+    options.include_untracked(enabled("IAY_GIT_CHECK_UNTRACKED", true));
 
     repo.statuses(Some(&mut options))
         .map(|statuses| statuses.iter().fold(Status::empty(), |a, b| a | b.status()))
         .unwrap_or_else(|_| Status::empty())
+}
+
+fn enabled(name: &str, default: bool) -> bool {
+    match env::var(name) {
+        Ok(value) => !matches!(value.as_str(), "0" | "false" | "no"),
+        Err(_) => default,
+    }
+}
+
+fn configured_symbol(name: &str, default: &str) -> String {
+    env::var(name)
+        .or_else(|_| env::var("IAY_GIT_STATUS_STAGED"))
+        .unwrap_or_else(|_| default.into())
 }
 
 fn get_ahead_behind(r: &Repository) -> Option<(usize, usize)> {
