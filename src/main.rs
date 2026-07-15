@@ -8,8 +8,6 @@ mod vcs;
 mod venv;
 
 use clap::Parser;
-use std::fmt::Write as _;
-
 use iay::colors;
 
 #[derive(Parser)]
@@ -44,12 +42,13 @@ fn iay_prompt(zsh: bool) -> String {
     let venv = venv::get_name();
     let prompt_char = prompt_char::prompt_char(zsh);
 
-    if zsh {
+    let prompt = if zsh {
         format!(
-            "%{{{cwd}{vcs}%}} %{{\n{venv}{pchar}%}} ",
+            "{cwd}{vcs}\n{venv}{nix}{pchar} ",
             cwd = cwd,
             vcs = vcs_status,
             venv = venv,
+            nix = venv::in_nix_shell(),
             pchar = prompt_char
         )
     } else {
@@ -61,7 +60,9 @@ fn iay_prompt(zsh: bool) -> String {
             pchar = prompt_char,
             nix = venv::in_nix_shell()
         )
-    }
+    };
+
+    escape_non_printing(&prompt, zsh)
 }
 
 fn iay_prompt_minimal(zsh: bool) -> String {
@@ -75,41 +76,60 @@ fn iay_prompt_minimal(zsh: bool) -> String {
     let venv = venv::get_name();
     let prompt_char = prompt_char::prompt_char(zsh);
 
-    if zsh {
-        let fmt = format!(
-            "{cwd}{vcs}{venv}{pchar} ",
-            cwd = cwd,
-            vcs = vcs_status,
-            venv = venv,
-            pchar = prompt_char
+    let prompt = format!(
+        "{cwd}{vcs}{venv}{nix}{pchar} ",
+        cwd = cwd,
+        vcs = vcs_status,
+        venv = venv,
+        nix = venv::in_nix_shell(),
+        pchar = prompt_char
+    );
+
+    escape_non_printing(&prompt, zsh)
+}
+
+/// Shell line editors must be told that ANSI SGR escape sequences take no
+/// display width. Zsh uses `%{...%}` and Bash/readline uses `\[...\]`.
+fn escape_non_printing(prompt: &str, zsh: bool) -> String {
+    let (open, close) = if zsh { ("%{", "%}") } else { ("\\[", "\\]") };
+    let mut escaped = String::with_capacity(prompt.len());
+    let mut remainder = prompt;
+
+    while let Some(start) = remainder.find('\x1b') {
+        escaped.push_str(&remainder[..start]);
+        let sequence = &remainder[start..];
+        let Some(end) = sequence.find('m') else {
+            escaped.push_str(sequence);
+            return escaped;
+        };
+
+        escaped.push_str(open);
+        escaped.push_str(&sequence[..=end]);
+        escaped.push_str(close);
+        remainder = &sequence[end + 1..];
+    }
+
+    escaped.push_str(remainder);
+    escaped
+}
+
+#[cfg(test)]
+mod tests {
+    use super::escape_non_printing;
+
+    #[test]
+    fn escapes_ansi_for_bash() {
+        assert_eq!(
+            escape_non_printing("\x1b[1;31mred\x1b[0m", false),
+            "\\[\x1b[1;31m\\]red\\[\x1b[0m\\]"
         );
-        let mut ret = String::new();
-        let mut color = false;
-        for ch in fmt.chars() {
-            if color {
-                if ch == 'm' {
-                    // colors always end with m
-                    ret.push_str("m%}");
-                    color = false;
-                } else {
-                    ret.push(ch)
-                }
-            } else if ch == 0x1b_u8.into() {
-                // ESC char, always starts colors
-                let _ = write!(ret, "%{{{esc}", esc = ch);
-                color = true;
-            } else {
-                ret.push(ch);
-            }
-        }
-        ret
-    } else {
-        format!(
-            "{cwd}{vcs}{venv}{pchar} ",
-            cwd = cwd,
-            vcs = vcs_status,
-            venv = venv,
-            pchar = prompt_char
-        )
+    }
+
+    #[test]
+    fn escapes_ansi_for_zsh() {
+        assert_eq!(
+            escape_non_printing("\x1b[1;31mred\x1b[0m", true),
+            "%{\x1b[1;31m%}red%{\x1b[0m%}"
+        );
     }
 }

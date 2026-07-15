@@ -6,11 +6,19 @@
 ~/D/g/a/iay main [!] %
 ```
 
-- bash users, set your `PS1`:
+- Bash users can set `PS1` directly:
 
 ```shell
 PS1='$(iay)'    # regular variant
 PS1='$(iay -m)' # minimal variant
+```
+
+  For a responsive prompt in large repositories, source the bundled asynchronous
+  integration instead. It shows the last completed Git state immediately and
+  computes the next one in the background:
+
+```shell
+source /path/to/iay/shell/iay.bash
 ```
 
 - zsh users, add this to your `.zshrc`:
@@ -24,6 +32,15 @@ _iay_prompt() {
 add-zsh-hook precmd _iay_prompt
 ```
 
+  Or source the bundled asynchronous integration, which avoids blocking Zsh on
+  Git status collection:
+
+```shell
+source /path/to/iay/shell/iay.zsh
+```
+
+  Set `IAY_COMMAND` before sourcing either file when `iay` is not on `PATH`.
+
 ## [Configure the prompt](Configuration.md)
 
 Configurations for the prompt.
@@ -32,4 +49,3 @@ Configurations for the prompt.
 
 ![base16-iay](https://user-images.githubusercontent.com/22131756/204612606-4a130ea2-a940-4250-80b4-60cf6c0ccbeb.png)
 ![gruvbox-iay](https://user-images.githubusercontent.com/22131756/204612665-eeac4fc2-6ec1-421c-8843-e6883ff90e1a.png)
-
