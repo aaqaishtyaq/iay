@@ -166,7 +166,7 @@ fn get_ahead_behind(r: &Repository) -> Option<(usize, usize)> {
         return None;
     }
 
-    let head_name = (head.shorthand())?;
+    let head_name = head.shorthand().ok()?;
     let head_branch = (r.find_branch(head_name, git2::BranchType::Local).ok())?;
     let upstream = (head_branch.upstream().ok())?;
     let head_oid = (head.target())?;
