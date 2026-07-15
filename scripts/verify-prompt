@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Reproduce and verify every visible iay Git prompt state in disposable repos.
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ -z "${IAY_COMMAND:-}" ]]; then
+  cargo build --quiet --manifest-path "$repo_root/Cargo.toml"
+  IAY_COMMAND="$repo_root/target/debug/iay"
+fi
+
+workspace="$(mktemp -d "${TMPDIR:-/tmp}/iay-prompt.XXXXXX")"
+trap 'rm -rf -- "$workspace"' EXIT
+
+new_repo() {
+  local name="$1"
+  local directory="$workspace/$name"
+
+  mkdir -p "$directory"
+  git init -q "$directory"
+  git -C "$directory" config user.name "iay prompt verifier"
+  git -C "$directory" config user.email "iay@example.invalid"
+  printf 'initial\n' > "$directory/tracked.txt"
+  git -C "$directory" add tracked.txt
+  git -C "$directory" commit -qm initial
+  printf '%s\n' "$directory"
+}
+
+strip_terminal_control() {
+  local escape=$'\033'
+  sed -e "s/${escape}\\[[0-9;]*m//g"
+}
+
+verify() {
+  local label="$1"
+  local directory="$2"
+  local expected="${3:-}"
+  local prompt
+
+  prompt="$(cd "$directory" && PWD="$directory" "$IAY_COMMAND")"
+  prompt="$(printf '%s' "$prompt" | strip_terminal_control)"
+  prompt="${prompt//\\[/}"
+  prompt="${prompt//\\]/}"
+  printf '%-10s %s\n' "$label:" "$prompt"
+
+  if [[ -n "$expected" && "$prompt" != *"$expected"* ]]; then
+    printf 'expected %s indicator in %s prompt\n' "$expected" "$label" >&2
+    exit 1
+  fi
+  if [[ -z "$expected" && "$prompt" == *'['* ]]; then
+    printf 'expected clean prompt without a status tray\n' >&2
+    exit 1
+  fi
+}
+
+clean="$(new_repo clean)"
+verify clean "$clean"
+
+untracked="$(new_repo untracked)"
+printf 'new\n' > "$untracked/new.txt"
+verify untracked "$untracked" '!'
+
+unstaged="$(new_repo unstaged)"
+printf 'modified\n' > "$unstaged/tracked.txt"
+verify unstaged "$unstaged" '±'
+
+staged="$(new_repo staged)"
+printf 'staged\n' > "$staged/tracked.txt"
+git -C "$staged" add tracked.txt
+verify staged "$staged" '±'
+
+stashed="$(new_repo stashed)"
+printf 'stashed\n' > "$stashed/tracked.txt"
+git -C "$stashed" stash push -qm prompt-test
+verify stashed "$stashed" '$'
+
+ahead="$(new_repo ahead)"
+ahead_branch="$(git -C "$ahead" branch --show-current)"
+ahead_base="$(git -C "$ahead" rev-parse HEAD)"
+git -C "$ahead" remote add origin .
+git -C "$ahead" update-ref "refs/remotes/origin/$ahead_branch" "$ahead_base"
+git -C "$ahead" config "branch.$ahead_branch.remote" origin
+git -C "$ahead" config "branch.$ahead_branch.merge" "refs/heads/$ahead_branch"
+printf 'ahead\n' > "$ahead/tracked.txt"
+git -C "$ahead" add tracked.txt
+git -C "$ahead" commit -qm ahead
+verify ahead "$ahead" '⇡'
+
+behind="$(new_repo behind)"
+behind_branch="$(git -C "$behind" branch --show-current)"
+behind_base="$(git -C "$behind" rev-parse HEAD)"
+printf 'upstream\n' > "$behind/tracked.txt"
+git -C "$behind" add tracked.txt
+git -C "$behind" commit -qm upstream
+behind_upstream="$(git -C "$behind" rev-parse HEAD)"
+git -C "$behind" reset --hard "$behind_base" >/dev/null
+git -C "$behind" remote add origin .
+git -C "$behind" update-ref "refs/remotes/origin/$behind_branch" "$behind_upstream"
+git -C "$behind" config "branch.$behind_branch.remote" origin
+git -C "$behind" config "branch.$behind_branch.merge" "refs/heads/$behind_branch"
+verify behind "$behind" '⇣'
+
+printf 'All prompt states verified.\n'
