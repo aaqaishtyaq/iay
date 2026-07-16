@@ -17,6 +17,10 @@
           packages.iay = naersk-lib.buildPackage {
             pname = "iay";
             root = ./.;
+            postInstall = ''
+              mkdir -p $out/share/iay
+              cp shell/iay.bash shell/iay.zsh $out/share/iay/
+            '';
           };
           packages.default = packages.iay;
 
