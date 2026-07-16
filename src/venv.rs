@@ -20,14 +20,27 @@ pub fn get_name() -> String {
 }
 
 pub fn in_nix_shell() -> String {
-    match env::var("IN_NIX_SHELL") {
-        Ok(p) => {
-            if p == "pure" {
-                colors::colored_string("(nix)", "green", "")
-            } else {
-                colors::colored_string("(nix)", "red", "")
-            }
-        }
-        _ => colors::colored_string("", "white", ""),
+    nix_shell_indicator(env::var("IN_NIX_SHELL").ok().as_deref())
+}
+
+fn nix_shell_indicator(nix_shell: Option<&str>) -> String {
+    match nix_shell {
+        Some("pure") => colors::colored_string("(nix) ", "green", ""),
+        Some(_) => colors::colored_string("(nix) ", "red", ""),
+        None => colors::colored_string("", "white", ""),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::nix_shell_indicator;
+    use crate::colors;
+
+    #[test]
+    fn nix_indicator_separates_the_prompt_character() {
+        assert_eq!(
+            nix_shell_indicator(Some("pure")),
+            colors::colored_string("(nix) ", "green", "")
+        );
     }
 }
