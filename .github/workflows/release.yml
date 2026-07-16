@@ -4,8 +4,16 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish (for example, v0.5.0)"
+        required: true
+        type: string
 env:
   CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+  RELEASE_REF: ${{ inputs.tag || github.ref }}
 
 jobs:
   # Build sources for different os and arch types
@@ -39,11 +47,13 @@ jobs:
     continue-on-error: true
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
 
       # Cache files between builds
       - name: Setup | Cache Cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -73,7 +83,7 @@ jobs:
           cd -
 
       - name: Deploy | Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: ${{ matrix.name }}
@@ -85,19 +95,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_REF }}
 
       - name: Setup | Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Setup | Checksums
         run: for file in iay-*/iay-*; do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256"; done
 
       - name: Build | Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: iay-*/iay-*
 
   # Publish iay to Crates.io
@@ -107,7 +119,9 @@ jobs:
     needs: github_release
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
 
       - name: Setup | Rust
         uses: actions-rs/toolchain@v1.0.7
@@ -126,15 +140,16 @@ jobs:
     needs: github_release
     steps:
       - name: Setup | Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
 
       - name: Setup | Release Tag
         run: |
-          GIT_TAG=${GITHUB_REF#refs/tags/}
-          echo "RELEASE_VERSION=$(echo $GIT_TAG | sed 's/^v//g')" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${RELEASE_TAG#v}" >> $GITHUB_ENV
 
       - name: Trigger formulae bump
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           repository: aaqaishtyaq/homebrew-tap
