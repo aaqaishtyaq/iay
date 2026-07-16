@@ -28,6 +28,11 @@ export IAY_CWD_ROOT_COLOR="blue"
 # Disable git information
 export IAY_DISABLE_VCS=1
 
+# The Nix-shell indicator is disabled by default. Set this to 1 to show it.
+# Its default colour is grey (bright black).
+export IAY_SHOW_NIX_SHELL=1
+export IAY_NIX_SHELL_COLOR="bright black"
+
 # there are three possible states for a git repo
 # - unstaged (working tree has been modified)
 # - staged (staging area has been modified)
