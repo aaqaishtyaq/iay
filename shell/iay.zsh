@@ -2,10 +2,23 @@
 # Source this after Zsh's other prompt configuration.
 
 autoload -Uz add-zsh-hook
-typeset -g _iay_async_dir="$(mktemp -d "${TMPDIR:-/tmp}/iay.XXXXXX")" || return
-typeset -g _iay_async_result="$_iay_async_dir/prompt"
+typeset -g _iay_async_dir=""
+typeset -g _iay_async_result=""
 typeset -g _iay_async_pid=""
 typeset -g PROMPT="$(IAY_DISABLE_VCS=1 command "${IAY_COMMAND:-iay}" -z)"
+
+_iay_async_init() {
+  local tmpdir async_dir
+  [[ -n $_iay_async_dir && -d $_iay_async_dir ]] && return 0
+
+  tmpdir="${TMPDIR:-/tmp}"
+  [[ -d $tmpdir && -w $tmpdir ]] || tmpdir=/tmp
+  async_dir=$(mktemp -d "$tmpdir/iay.XXXXXX") || return 1
+  _iay_async_dir="$async_dir"
+  _iay_async_result="$_iay_async_dir/prompt"
+}
+
+_iay_async_init || return
 
 _iay_async_poll() {
   if [[ -f $_iay_async_result ]]; then
@@ -20,10 +33,11 @@ _iay_async_poll() {
 _iay_async_start() {
   setopt localoptions no_bgnice
   [[ -n $_iay_async_pid ]] && return
+  _iay_async_init || return
   (
     local result
     result=$(mktemp "$_iay_async_result.XXXXXX") || exit
-    command "${IAY_COMMAND:-iay}" -z > "$result"
+    command "${IAY_COMMAND:-iay}" -z >| "$result"
     [[ -d $_iay_async_dir ]] && mv -f -- "$result" "$_iay_async_result"
   ) &!
   _iay_async_pid=$!

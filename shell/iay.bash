@@ -1,10 +1,23 @@
 # Non-blocking Bash integration for iay.
 # Source this after Bash's other prompt configuration.
 
-_iay_async_dir=$(mktemp -d "${TMPDIR:-/tmp}/iay.XXXXXX") || return
-_iay_async_result="$_iay_async_dir/prompt"
+_iay_async_dir=""
+_iay_async_result=""
 _iay_async_pid=""
 _iay_prompt="$(IAY_DISABLE_VCS=1 command "${IAY_COMMAND:-iay}")"
+
+_iay_async_init() {
+  local tmpdir async_dir
+  [[ -n $_iay_async_dir && -d $_iay_async_dir ]] && return 0
+
+  tmpdir="${TMPDIR:-/tmp}"
+  [[ -d $tmpdir && -w $tmpdir ]] || tmpdir=/tmp
+  async_dir=$(mktemp -d "$tmpdir/iay.XXXXXX") || return 1
+  _iay_async_dir="$async_dir"
+  _iay_async_result="$_iay_async_dir/prompt"
+}
+
+_iay_async_init || return
 
 _iay_async_poll() {
   if [[ -f $_iay_async_result ]]; then
@@ -18,10 +31,11 @@ _iay_async_poll() {
 
 _iay_async_start() {
   [[ -n $_iay_async_pid ]] && return
+  _iay_async_init || return
   (
     local result
     result=$(mktemp "$_iay_async_result.XXXXXX") || exit
-    command "${IAY_COMMAND:-iay}" > "$result"
+    command "${IAY_COMMAND:-iay}" >| "$result"
     [[ -d $_iay_async_dir ]] && mv -f -- "$result" "$_iay_async_result"
   ) &
   _iay_async_pid=$!
