@@ -57,11 +57,11 @@ export IAY_GIT_WT_ADDED_COLOR="magenta"
 export IAY_GIT_STATUS_STASH="$"
 
 # Full working-tree traversal is enabled by default so untracked files are
-# displayed. Set this to 0 for a faster synchronous prompt in very large repos.
+# displayed. Set this to 0 for a faster prompt in very large repos.
 export IAY_GIT_CHECK_UNTRACKED=0
 
 # These are enabled by default to preserve the original prompt display. Set
-# either to 0 to skip its Git graph/ref traversal in synchronous integrations.
+# either to 0 to skip its Git graph/ref traversal for a faster prompt.
 export IAY_GIT_SHOW_UPSTREAM=0
 export IAY_GIT_SHOW_STASH=0
 

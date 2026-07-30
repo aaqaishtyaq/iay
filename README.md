@@ -13,14 +13,6 @@ PS1='$(iay)'    # regular variant
 PS1='$(iay -m)' # minimal variant
 ```
 
-  For a responsive prompt in large repositories, source the bundled asynchronous
-  integration instead. It shows the last completed Git state immediately and
-  computes the next one in the background:
-
-```shell
-source /path/to/iay/shell/iay.bash
-```
-
 - zsh users, add this to your `.zshrc`:
 
 ```shell
@@ -31,15 +23,6 @@ _iay_prompt() {
 }
 add-zsh-hook precmd _iay_prompt
 ```
-
-  Or source the bundled asynchronous integration, which avoids blocking Zsh on
-  Git status collection:
-
-```shell
-source /path/to/iay/shell/iay.zsh
-```
-
-  Set `IAY_COMMAND` before sourcing either file when `iay` is not on `PATH`.
 
 ## Verify prompt states
 
