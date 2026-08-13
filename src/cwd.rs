@@ -6,23 +6,44 @@ use iay::colors;
 use std::env;
 use tico::tico;
 
+fn home_dir() -> Option<String> {
+    if let Ok(home) = env::var("HOME") {
+        if !home.is_empty() {
+            return Some(home);
+        }
+    }
+
+    // $HOME isn't always set (e.g. minimal containers, `env -i`), so fall
+    // back to the conventional Linux home path.
+    if cfg!(target_os = "linux") {
+        if let Ok(user) = env::var("USER") {
+            if !user.is_empty() {
+                return Some(format!("/home/{}", user));
+            }
+        }
+    }
+
+    None
+}
+
 pub fn cwd() -> Option<String> {
     let path_env = env::current_dir().ok()?;
     let mut path = format!("{}", path_env.display());
-    let home = env::var("HOME").unwrap();
+    let home = home_dir();
     let tilde_expand = env::var("IAY_EXPAND_TILDE").unwrap_or_else(|_| "0".into());
 
-    let cwd_color = if path.contains(&home) {
+    let in_home = home.as_deref().is_some_and(|h| path.contains(h));
+
+    let cwd_color = if in_home {
         env::var("IAY_CWD_HOME_COLOR").unwrap_or_else(|_| "bright red".into())
     } else {
         env::var("IAY_CWD_ROOT_COLOR").unwrap_or_else(|_| "bright cyan".into())
     };
 
-    if let "0" = tilde_expand.as_ref() {
-        let home_dir = &home;
-        let home_dir_ext = format!("{}{}", home_dir, "/");
-        if (&path == home_dir) || path.starts_with(&home_dir_ext) {
-            path = path.replacen(&home_dir[..], "~", 1);
+    if let ("0", Some(home)) = (tilde_expand.as_ref(), home.as_deref()) {
+        let home_ext = format!("{}{}", home, "/");
+        if (path == home) || path.starts_with(&home_ext) {
+            path = path.replacen(home, "~", 1);
         }
     };
 
@@ -30,7 +51,7 @@ pub fn cwd() -> Option<String> {
     match cwd_shorten.as_ref() {
         "0" => Some(colors::colored_string(&path, &cwd_color, "bold")),
         _ => Some(colors::colored_string(
-            &tico(&path, Option::None),
+            &tico(&path, home.as_deref()),
             &cwd_color,
             "bold",
         )),
